@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	pt "github.com/monochromegane/the_platinum_searcher"
@@ -25,14 +25,15 @@ func main() {
 	extension := flag.String("extension", ".", "extension filter")
 	flag.Parse()
 
-	files, err := ioutil.ReadDir(".")
+	var err error
+	*rootPath, err = filepath.Abs(*rootPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var unusedFiles []string
 
-	for _, f := range files {
+	filepath.Walk(".", func(path string, f os.FileInfo, err error) error {
 		if !f.IsDir() && strings.HasSuffix(f.Name(), *extension) {
 			fmt.Printf("searching for %s", f.Name())
 			res := findStringInDir(*rootPath, strings.TrimRight(f.Name(), *extension))
@@ -42,7 +43,9 @@ func main() {
 			}
 			fmt.Printf("\n")
 		}
-	}
+
+		return nil
+	})
 
 	fmt.Printf("\nUnused files:\n")
 	for _, v := range unusedFiles {
